@@ -1,0 +1,9 @@
+[ ] Set server URL
+[ ] Splash screen
+[ ] App Name
+[ ] UI changes
+[ ] Loading screen
+
+Main color: #673AB7
+Black color: #0E1116
+White color: #F2FDFF

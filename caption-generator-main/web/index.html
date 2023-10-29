@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Caption Generator</title>
+    <link rel="stylesheet" href="./pico.min.css" />
+    <style>
+      #preview,
+      #caption-loading,
+      #caption-container {
+        display: none;
+      }
+
+      #play-icon {
+        background-color: var(--primary);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 100%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        margin-left: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <h3>Caption Generator</h3>
+      <img src="#" id="preview" style="margin-bottom: 20px" />
+      <label for="file"
+        >Upload image
+        <input type="file" id="file" name="file" />
+      </label>
+      <button onclick="generate()">Generate Caption</button>
+
+      <a href="#" aria-busy="true" id="caption-loading"
+        >Generating caption, please wait…</a
+      >
+
+      <p id="caption-container" style="color: green; font-weight: bold">
+        Caption HERE
+      </p>
+    </main>
+
+    <script>
+      let imageBase64 = null;
+      let type = null;
+      const loader = document.querySelector("#caption-loading");
+      const captionContainer = document.querySelector("#caption-container");
+      const generate = () => {
+        loader.style.display = "block";
+        const requestBody = {
+          image: imageBase64,
+          extension: type,
+        };
+
+        fetch("/api/generate", {
+          method: "POST",
+          body: JSON.stringify(requestBody),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+          .then((res) => res.json())
+          .then((res) => {
+            captionContainer.textContent = res["caption"];
+            captionContainer.innerHTML +=
+              '<span id="play-icon" onclick="play(' +
+              res["audio_id"] +
+              ')"><img src="/play.svg" width="20" /></span>';
+            play(res["audio_id"]);
+          })
+          .catch((err) => {
+            captionContainer.style.color = "red";
+            captionContainer.textContent =
+              "Error while generating image caption";
+          })
+          .finally(() => {
+            loader.style.display = "none";
+            captionContainer.style.display = "flex";
+          });
+      };
+
+      document.querySelector("input").onchange = (e) => {
+        const fr = new FileReader();
+        fr.onloadend = () => {
+          const preview = document.querySelector("img");
+          preview.src = fr.result;
+          preview.style.display = "block";
+
+          const base64WithType = fr.result.split(",");
+          imageBase64 = base64WithType[1];
+          type = base64WithType[0].split(";")[0].split("/")[1];
+        };
+        fr.readAsDataURL(e.target.files[0]);
+      };
+
+      const play = (id) => {
+        const sound = new Audio("/audio/" + id);
+        sound.play();
+      };
+    </script>
+  </body>
+</html>
